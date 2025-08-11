@@ -1,0 +1,8 @@
+[ConnectionManager]
+Name = facebook
+BusName = org.freedesktop.Telepathy.ConnectionManager.facebook
+ObjectPath = /org/freedesktop/Telepathy/ConnectionManager/facebook
+
+[Protocol facebook]
+param-account = s required
+param-password = s secret

@@ -1,0 +1,6 @@
+[submodule "bitlbee-facebook"]
+	path = bitlbee-facebook
+	url = git@github.com:freemangordon/bitlbee-facebook.git
+[submodule "bitlbee"]
+	path = bitlbee
+	url = https://github.com/bitlbee/bitlbee.git

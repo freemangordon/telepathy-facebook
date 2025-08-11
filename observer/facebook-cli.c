@@ -1,0 +1,36 @@
+/*
+ * This file is part of telepathy-facebook
+ *
+ * Copyright (C) 2025 Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library. If not, see <https://www.gnu.org/licenses/>.
+ */
+#include <telepathy-glib/proxy-subclass.h>
+
+#include "facebook-cli.h"
+
+#include "cli.h"
+#include "cli-body.h"
+
+TpProxyPendingCall *
+facebook_cli_account_verified(gpointer proxy,
+                              gint timeout_ms,
+                              gboolean verified,
+                              facebook_cli_account_verified_cb cb,
+                              gpointer user_data,
+                              GDestroyNotify destroy,
+                              GObject *weak_object)
+{
+  return fb_cli_channel_interface_account_verify_call_account_verified(
+    proxy, timeout_ms, verified, cb, user_data, destroy, weak_object);
+}

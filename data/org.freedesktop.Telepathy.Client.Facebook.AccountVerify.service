@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.freedesktop.Telepathy.Client.Facebook.AccountVerify
+Exec=/usr/libexec/telepathy-facebook/observer
