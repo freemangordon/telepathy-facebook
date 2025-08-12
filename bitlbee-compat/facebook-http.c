@@ -244,6 +244,18 @@ fb_http_request_new(FbHttp *http, const gchar *url, gboolean post,
 {
   FbHttpRequest *req = g_object_new(FB_TYPE_HTTP_REQUEST, NULL);
   FbHttpRequestPrivate *priv = FB_HTTP_REQUEST_PRIVATE(req);
+  static gboolean debug_enabled = FALSE;
+  static gboolean debug_inited = FALSE;
+
+  if (G_UNLIKELY(!debug_inited))
+  {
+    debug_enabled = (g_getenv("BITLBEE_DEBUG")) ||
+        (g_getenv("BITLBEE_DEBUG_FACEBOOK"));
+    debug_inited = TRUE;
+  }
+
+  g_return_if_fail(http != NULL);
+  g_return_if_fail(url != NULL);
 
   priv->http = g_object_ref(http);
   priv->func = func;
@@ -252,10 +264,13 @@ fb_http_request_new(FbHttp *http, const gchar *url, gboolean post,
   priv->url = g_strdup(url);
   priv->post = post;
 
-  g_signal_connect(priv->msg, "starting",
-                   G_CALLBACK(on_request_starting), req);
-  g_signal_connect(priv->msg, "finished",
-                   G_CALLBACK(on_request_finished), req);
+  if (debug_enabled)
+  {
+    g_signal_connect(priv->msg, "starting",
+                     G_CALLBACK(on_request_starting), req);
+    g_signal_connect(priv->msg, "finished",
+                     G_CALLBACK(on_request_finished), req);
+  }
 
   return req;
 }
