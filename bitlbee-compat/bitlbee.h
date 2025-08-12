@@ -24,19 +24,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifndef G_MODULE_EXPORT
-#define G_MODULE_EXPORT
-#endif
-
-#define MAX_STRING 511
-#define PASSWORD_PENDING "\r\rchangeme\r\r"
-
-#define PACKAGE "TelepathyFacebook"
-#define BITLBEE_VERSION "3.6"
-#define BITLBEE_VER(a, b, c) (((a) << 16) + ((b) << 8) + (c))
-#define BITLBEE_VERSION_CODE BITLBEE_VER(3, 6, 0)
-#define BITLBEE_ABI_VERSION_CODE 1
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,22 +35,15 @@ int bool2int(char *value);
 
 typedef struct conf
 {
-    char *iface_in, *iface_out;
+    char *iface_in;
+    char *iface_out;
     char *port;
     char *cafile;
 } conf_t;
 
-typedef struct global {
-    /* In forked mode, child processes store the fd of the IPC socket here. */
-    int listen_socket;
-    gint listen_watch_source_id;
-    struct help *help;
-    char *conf_file;
+typedef struct global
+{
     conf_t *conf;
-    GList *storage; /* The first backend in the list will be used for saving */
-    GList *auth;    /* Authentication backends */
-    char *helpfile;
-    int restart;
 } global_t;
 
 extern global_t global;
