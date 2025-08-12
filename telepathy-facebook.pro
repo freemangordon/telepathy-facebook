@@ -5,7 +5,7 @@ CONFIG -= qt
 
 CONFIG += link_pkgconfig
 
-PKGCONFIG += telepathy-glib json-glib-1.0 libssl libcrypto dbus-glib-1
+PKGCONFIG += telepathy-glib json-glib-1.0 libssl libcrypto dbus-glib-1 libsoup-2.4
 
 DEFINES += VERSION=\\\"QT-TEST\\\"
 DEFINES += PACKAGE_VERSION=\\\"1.0\\\"
@@ -18,14 +18,14 @@ BITLBEE_SRC_DIR = $$PWD/bitlbee-facebook/facebook
 
 SOURCES += \
     $$BITLBEE_SRC_DIR/facebook-api.c \
-    $$BITLBEE_SRC_DIR/facebook-http.c \
     $$BITLBEE_SRC_DIR/facebook-json.c \
     $$BITLBEE_SRC_DIR/facebook-mqtt.c \
     $$BITLBEE_SRC_DIR/facebook-thrift.c \
     $$BITLBEE_SRC_DIR/facebook-util.c \
     bitlbee-compat/base64.c \
     bitlbee-compat/events_glib.c \
-    bitlbee-compat/http_client.c \
+    bitlbee-compat/facebook-http.c \
+    bitlbee-compat/fb-http-values.c \
     bitlbee-compat/misc.c \
     bitlbee-compat/proxy.c \
     bitlbee-compat/set.c \
