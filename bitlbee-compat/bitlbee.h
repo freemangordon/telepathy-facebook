@@ -44,7 +44,7 @@ extern "C" {
 typedef struct account_t account_t;
 struct groupchat;
 
-#include "misc.h"
+int bool2int(char *value);
 
 typedef struct conf
 {

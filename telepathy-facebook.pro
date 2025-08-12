@@ -14,23 +14,26 @@ DEFINES += _GNU_SOURCE
 INCLUDEPATH += $$PWD/bitlbee-compat $$PWD/bitlbee-facebook/facebook
 
 # marshallers
-BITLBEE_SRC_DIR = $$PWD/bitlbee-facebook/facebook
+BB_FB_SRC_DIR = $$PWD/bitlbee-facebook/facebook
 
 SOURCES += \
-    $$BITLBEE_SRC_DIR/facebook-api.c \
-    $$BITLBEE_SRC_DIR/facebook-json.c \
-    $$BITLBEE_SRC_DIR/facebook-mqtt.c \
-    $$BITLBEE_SRC_DIR/facebook-thrift.c \
-    $$BITLBEE_SRC_DIR/facebook-util.c \
+    $$BB_FB_SRC_DIR/facebook-api.c \
+    $$BB_FB_SRC_DIR/facebook-json.c \
+    $$BB_FB_SRC_DIR/facebook-mqtt.c \
+    $$BB_FB_SRC_DIR/facebook-thrift.c \
+    $$BB_FB_SRC_DIR/facebook-util.c \
+
+SOURCES += \
+    bitlbee-compat/compat.c \
     bitlbee-compat/base64.c \
     bitlbee-compat/events_glib.c \
     bitlbee-compat/facebook-http.c \
     bitlbee-compat/fb-http-values.c \
-    bitlbee-compat/misc.c \
     bitlbee-compat/proxy.c \
     bitlbee-compat/sha1.c \
-    bitlbee-compat/ssl_openssl.c \
-    bitlbee-compat/url.c \
+    bitlbee-compat/ssl_openssl.c
+
+SOURCES += \
     tp/account-verify-channel.c \
     tp/account-verify-manager.c \
     tp/avatars.c \
@@ -54,11 +57,11 @@ HEADERS += \
 
 GLIB_GENMARSHAL=glib-genmarshal
 
-facebook_marshal_h.target = $$BITLBEE_SRC_DIR/facebook-marshal.h
-facebook_marshal_h.commands = $${GLIB_GENMARSHAL} --prefix=fb_marshal --header $$BITLBEE_SRC_DIR/marshaller.list > $@
+facebook_marshal_h.target = $$BB_FB_SRC_DIR/facebook-marshal.h
+facebook_marshal_h.commands = $${GLIB_GENMARSHAL} --prefix=fb_marshal --header $$BB_FB_SRC_DIR/marshaller.list > $@
 
-facebook_marshal_c.target = $$BITLBEE_SRC_DIR/facebook-marshal.c
-facebook_marshal_c.commands = $${GLIB_GENMARSHAL} --prefix=fb_marshal --body $$BITLBEE_SRC_DIR/marshaller.list >> $@
+facebook_marshal_c.target = $$BB_FB_SRC_DIR/facebook-marshal.c
+facebook_marshal_c.commands = $${GLIB_GENMARSHAL} --prefix=fb_marshal --body $$BB_FB_SRC_DIR/marshaller.list >> $@
 SOURCES += $$facebook_marshal_c.target
 
 PRE_TARGETDEPS += $$facebook_marshal_h.target

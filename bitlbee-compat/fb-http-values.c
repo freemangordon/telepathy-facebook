@@ -23,7 +23,7 @@
 #include <libsoup/soup.h>
 
 #include "facebook-http.h"
-#include "misc.h"
+#include "bitlbee.h"
 
 static gboolean
 fb_http_value_equal(gconstpointer a, gconstpointer b)
