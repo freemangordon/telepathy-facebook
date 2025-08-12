@@ -44,6 +44,7 @@ struct _FbAccountVerifyManagerPrivate
 {
   TpBaseConnection *conn;
   FbAccountVerifyChannel *channel;
+  GTask *task;
   gboolean dispose_has_run;
 };
 
@@ -72,8 +73,8 @@ enum
 
 static void
 fb_account_verify_manager_foreach_channel (TpChannelManager *manager,
-                                                 TpExportableChannelFunc foreach,
-                                                 gpointer user_data)
+                                           TpExportableChannelFunc foreach,
+                                           gpointer user_data)
 {
   FbAccountVerifyManagerPrivate *priv = PRIVATE(manager);
 
@@ -102,7 +103,7 @@ fb_account_verify_manager_init(FbAccountVerifyManager *self)
 
 static void
 fb_account_verify_manager_get_property(GObject *object, guint property_id,
-                                             GValue *value, GParamSpec *pspec)
+                                       GValue *value, GParamSpec *pspec)
 {
   FbAccountVerifyManagerPrivate *priv = PRIVATE(object);
 
@@ -123,9 +124,9 @@ fb_account_verify_manager_get_property(GObject *object, guint property_id,
 
 static void
 fb_account_verify_manager_set_property(GObject *object,
-                                             guint property_id,
-                                             const GValue *value,
-                                             GParamSpec *pspec)
+                                       guint property_id,
+                                       const GValue *value,
+                                       GParamSpec *pspec)
 {
   FbAccountVerifyManagerPrivate *priv = PRIVATE(object);
 
@@ -205,8 +206,7 @@ fb_account_verify_manager_dispose (GObject *object)
 }
 
 static void
-fb_account_verify_manager_class_init(
-  FbAccountVerifyManagerClass *klass)
+fb_account_verify_manager_class_init(FbAccountVerifyManagerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
@@ -237,12 +237,12 @@ fb_account_verify_manager_new(TpBaseConnection *connection)
 }
 
 static void
-channel_closed_cb(GObject *chan, FbAccountVerifyManager *manager)
+channel_closed_cb(GObject *chan, FbAccountVerifyManager *self)
 {
-  FbAccountVerifyManagerPrivate *priv = PRIVATE(manager);
+  FbAccountVerifyManagerPrivate *priv = PRIVATE(self);
 
   tp_channel_manager_emit_channel_closed_for_object(
-    manager, TP_EXPORTABLE_CHANNEL(chan));
+    self, TP_EXPORTABLE_CHANNEL(chan));
 
   tp_clear_object(&priv->channel);
 }
@@ -252,42 +252,42 @@ channel_finished_cb(FbAccountVerifyChannel *channel, gboolean verified,
                     guint domain, gint code, const gchar *message,
                     gpointer user_data)
 {
-  GSimpleAsyncResult *result = user_data;
+  FbAccountVerifyManager *self = user_data;
+  FbAccountVerifyManagerPrivate *priv = PRIVATE(self);
+  GTask *task = priv->task;
+
+  if (!task)
+    return;
+
+  priv->task = NULL;
 
   if (domain > 0)
   {
-    GError *error = g_error_new(domain, code, "%s", message);
+    FB_DEBUG("Failed: %s", message);
 
-    FB_DEBUG("Failed: %s", error->message);
-    g_simple_async_result_set_from_error(result, error);
-    g_error_free(error);
+    g_task_return_new_error(task, domain, code, "%s", message);
   }
   else
-    g_simple_async_result_set_op_res_gboolean(result, verified);
+    g_task_return_boolean(task, verified);
 
-  g_simple_async_result_complete(result);
-  g_object_unref(result);
+  g_object_unref(task);
 }
 
 void
 fb_account_verify_manager_verify_async(FbAccountVerifyManager *self,
-                                             const gchar *verify_url,
-                                             const gchar *title,
-                                             const gchar *message,
-                                             GAsyncReadyCallback callback,
-                                             gpointer user_data)
+                                       const gchar *verify_url,
+                                       const gchar *title,
+                                       const gchar *message,
+                                       GAsyncReadyCallback callback,
+                                       gpointer user_data)
 {
   FbAccountVerifyManagerPrivate *priv = PRIVATE(self);
   gchar *object_path = g_strdup_printf(
     "%s/FbAccountVerifyChannel",
     tp_base_connection_get_object_path(priv->conn));
   FbAccountVerifyChannel *channel;
-  GSimpleAsyncResult *result =
-    g_simple_async_result_new(G_OBJECT(self),
-                              callback,
-                              user_data,
-                              fb_account_verify_manager_verify_async);
 
+  priv->task = g_task_new(G_OBJECT(self), NULL, callback, user_data);
   channel = g_object_new(FB_TYPE_ACCOUNT_VERIFY_CHANNEL,
                          "connection", priv->conn,
                          "object-path", object_path,
@@ -306,7 +306,7 @@ fb_account_verify_manager_verify_async(FbAccountVerifyManager *self,
                              G_CALLBACK(channel_closed_cb), self, 0);
   tp_g_signal_connect_object(priv->channel, "finished",
                              G_CALLBACK(channel_finished_cb),
-                             g_object_ref(result), 0);
+                             self, 0);
 
   tp_base_channel_register((TpBaseChannel *)priv->channel);
 
@@ -315,26 +315,14 @@ fb_account_verify_manager_verify_async(FbAccountVerifyManager *self,
 
   g_free(object_path);
   g_object_unref(channel);
-  g_object_unref(result);
 }
 
 gboolean
-fb_account_verify_manager_verify_finish(
-  FbAccountVerifyManager *self,
-  GAsyncResult *result,
-  GError **error)
+fb_account_verify_manager_verify_finish(FbAccountVerifyManager *self,
+                                        GAsyncResult *result,
+                                        GError **error)
 {
-  GSimpleAsyncResult *simple = (GSimpleAsyncResult *)result;
+  g_return_val_if_fail(g_task_is_valid(result, self), FALSE);
 
-  if (g_simple_async_result_propagate_error(simple, error))
-    return FALSE;
-
-  g_return_val_if_fail(
-    g_simple_async_result_is_valid(
-      result,
-      G_OBJECT(self),
-      fb_account_verify_manager_verify_async),
-    FALSE);
-
-  return g_simple_async_result_get_op_res_gboolean(simple);
+  return g_task_propagate_boolean(G_TASK(result), error);
 }

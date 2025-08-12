@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <node name="/Channel_Interface_account_verify" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
-  <interface name="org.freedesktop.Telepathy.Channel.Interface.FacebookAccountVerify">
+  <interface name="org.freedesktop.Telepathy.Channel.Interface.Facebook.AccountVerify">
 
     <property name="VerifyUrl" type="s" access="read"/>
     <property name="Title" type="s" access="read"/>

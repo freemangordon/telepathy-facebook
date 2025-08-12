@@ -88,7 +88,7 @@ enum
 static guint signals[LAST_SIGNAL] = { 0 };
 
 #define FB_ACCOUNT_VERIFY_IFACE \
-  "org.freedesktop.Telepathy.Channel.Interface.FacebookAccountVerify"
+  "org.freedesktop.Telepathy.Channel.Interface.Facebook.AccountVerify"
 
 static void
 fb_account_verify_channel_init(FbAccountVerifyChannel *self)
@@ -210,6 +210,8 @@ fb_account_verify_channel_fill_immutable_properties(TpBaseChannel *chan,
     G_OBJECT(chan), properties,
     TP_IFACE_CHANNEL_TYPE_SERVER_AUTHENTICATION, "AuthenticationMethod",
     FB_ACCOUNT_VERIFY_IFACE, "VerifyUrl",
+    FB_ACCOUNT_VERIFY_IFACE, "Title",
+    FB_ACCOUNT_VERIFY_IFACE, "Message",
     NULL);
 }
 

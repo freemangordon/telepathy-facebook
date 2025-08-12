@@ -35,7 +35,7 @@ public:
 
 Q_SIGNALS:
   void accountVerify(uintptr_t tag, const QString &url,
-                     const QString &message);
+                     const QString &title, const QString &message);
 
 protected:
   TpBaseClient *m_handler;

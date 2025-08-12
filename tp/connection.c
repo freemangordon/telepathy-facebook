@@ -166,6 +166,8 @@ static const gchar *interfaces_always_present[] =
   TP_IFACE_CONNECTION_INTERFACE_CONTACT_LIST,
   TP_IFACE_CONNECTION_INTERFACE_AVATARS,
   TP_IFACE_CONNECTION_INTERFACE_CONTACTS,
+  TP_IFACE_CONNECTION_INTERFACE_REQUESTS,
+
   NULL
 };
 
@@ -582,7 +584,7 @@ _iface_start_connecting(TpBaseConnection *self, GError **error)
   tp_base_connection_set_self_handle(self, self_handle);
   tp_base_connection_change_status(self,
                                    TP_CONNECTION_STATUS_CONNECTING,
-                                   TP_CONNECTION_STATUS_REASON_NONE_SPECIFIED);
+                                   TP_CONNECTION_STATUS_REASON_REQUESTED);
 
   fb_api_auth(priv->api, priv->fb_id, priv->password, NULL);
 

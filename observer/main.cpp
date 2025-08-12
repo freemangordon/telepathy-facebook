@@ -35,7 +35,8 @@ main(int argc, char *argv[])
     FacebookAccountVerifyObserver observer;
 
     QObject::connect(&observer, &FacebookAccountVerifyObserver::accountVerify,
-    &app, [&](uintptr_t tag, const QString &url)
+    &app, [&](uintptr_t tag, const QString &url, const QString &title,
+              const QString &message)
     {
       qDebug() << "New account verify request, tag"
                << Qt::hex << tag;

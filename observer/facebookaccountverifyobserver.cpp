@@ -22,7 +22,7 @@
 #include <QEventLoop>
 
 #define FB_ACCT_VRFY_IFACE \
-  "org.freedesktop.Telepathy.Channel.Interface.FacebookAccountVerify"
+  "org.freedesktop.Telepathy.Channel.Interface.Facebook.AccountVerify"
 
 void
 FacebookAccountVerifyObserver::handle_channels_cb(
@@ -58,11 +58,14 @@ FacebookAccountVerifyObserver::handle_channels_cb(
       if (url)
       {
         const gchar *message = NULL;
+        const gchar *title = NULL;
 
+        g_variant_lookup(props, FB_ACCT_VRFY_IFACE ".Title", "&s", &title);
         g_variant_lookup(props, FB_ACCT_VRFY_IFACE ".Message", "&s", &message);
         g_object_ref(channel);
         Q_EMIT(_this->accountVerify((uintptr_t)channel,
                                     QString::fromUtf8(url),
+                                    QString::fromUtf8(title),
                                     QString::fromUtf8(message)));
       }
       else
