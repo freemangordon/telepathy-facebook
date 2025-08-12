@@ -9,6 +9,8 @@ PKGCONFIG += telepathy-glib json-glib-1.0 libssl libcrypto dbus-glib-1 libsoup-2
 
 DEFINES += VERSION=\\\"QT-TEST\\\"
 DEFINES += PACKAGE_VERSION=\\\"1.0\\\"
+DEFINES += PACKAGE=\\\"TelepathyFacebook\\\"
+
 DEFINES += _GNU_SOURCE
 
 INCLUDEPATH += $$PWD/bitlbee-compat $$PWD/bitlbee-facebook/facebook
@@ -30,7 +32,6 @@ SOURCES += \
     bitlbee-compat/facebook-http.c \
     bitlbee-compat/fb-http-values.c \
     bitlbee-compat/proxy.c \
-    bitlbee-compat/sha1.c \
     bitlbee-compat/ssl_openssl.c
 
 SOURCES += \
