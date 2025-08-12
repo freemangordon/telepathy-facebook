@@ -41,57 +41,29 @@
 extern "C" {
 #endif
 
-#include "set.h"
-#include "account.h"
+typedef struct account_t account_t;
+struct groupchat;
+
 #include "misc.h"
 
-struct im_connection {
-    void *proto_data;
-    account_t *acc;
-};
-
-struct groupchat {
-};
-
-typedef struct conf {
-	char *iface_in, *iface_out;
-	char *port;
-	/*int nofork;
-	int verbose;
-	runmode_t runmode;
-	authmode_t authmode;
-	char *auth_backend;
-	char *auth_pass;
-	char *oper_pass;
-	int allow_account_add;
-	char *hostname;
-	char *configdir;
-	char *plugindir;
-	char *pidfile;
-	char *motdfile;
-	char *primary_storage;
-	char **migrate_storage;
-	int ping_interval;
-	int ping_timeout;
-	char *user;
-	size_t ft_max_size;
-	int ft_max_kbps;
-	char *ft_listen;
-	char **protocols;*/
-	char *cafile;
+typedef struct conf
+{
+    char *iface_in, *iface_out;
+    char *port;
+    char *cafile;
 } conf_t;
 
 typedef struct global {
-	/* In forked mode, child processes store the fd of the IPC socket here. */
-	int listen_socket;
-	gint listen_watch_source_id;
-	struct help *help;
-	char *conf_file;
-	conf_t *conf;
-	GList *storage; /* The first backend in the list will be used for saving */
-	GList *auth;    /* Authentication backends */
-	char *helpfile;
-	int restart;
+    /* In forked mode, child processes store the fd of the IPC socket here. */
+    int listen_socket;
+    gint listen_watch_source_id;
+    struct help *help;
+    char *conf_file;
+    conf_t *conf;
+    GList *storage; /* The first backend in the list will be used for saving */
+    GList *auth;    /* Authentication backends */
+    char *helpfile;
+    int restart;
 } global_t;
 
 extern global_t global;
@@ -103,12 +75,6 @@ gboolean ssl_sockerr_again(void *ssl);
 #ifndef GLIB_VERSION_2_68
 #define g_memdup2 g_memdup
 #endif
-
-struct im_connection *imcb_new(account_t *acc);
-void imc_free(struct im_connection *ic);
-void imcb_chat_free(struct groupchat *c);
-void
-imcb_log(struct im_connection *, char *format, ...);
 
 #ifdef __cplusplus
 }

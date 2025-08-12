@@ -28,7 +28,6 @@ SOURCES += \
     bitlbee-compat/fb-http-values.c \
     bitlbee-compat/misc.c \
     bitlbee-compat/proxy.c \
-    bitlbee-compat/set.c \
     bitlbee-compat/sha1.c \
     bitlbee-compat/ssl_openssl.c \
     bitlbee-compat/url.c \
