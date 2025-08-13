@@ -113,18 +113,61 @@ fb_contact_list_dup_contacts(TpBaseContactList *self)
   return tp_handle_set_copy(priv->contacts);
 }
 
+static TpSubscriptionState
+map_friendship_to_publish(FbApiFriendshipStatus fs, gchar **publish_request)
+{
+  switch (fs)
+  {
+    case FB_API_FRIENDSHIP_STATUS_ARE_FRIENDS:
+    {
+      return TP_SUBSCRIPTION_STATE_YES;
+    }
+    case FB_API_FRIENDSHIP_STATUS_INCOMING_REQUEST:
+    {
+      if (publish_request)
+        *publish_request = g_strdup("Incoming friend request");
+
+      return TP_SUBSCRIPTION_STATE_ASK;
+    }
+    case FB_API_FRIENDSHIP_STATUS_OUTGOING_REQUEST:
+    {
+      return TP_SUBSCRIPTION_STATE_NO;
+    }
+    case FB_API_FRIENDSHIP_STATUS_CAN_REQUEST:
+    case FB_API_FRIENDSHIP_STATUS_CAN_RECONFIRM:
+    case FB_API_FRIENDSHIP_STATUS_CANNOT_REQUEST:
+    case FB_API_FRIENDSHIP_STATUS_NOT_FRIENDS:
+    case FB_API_FRIENDSHIP_STATUS_BLOCKED:
+    case FB_API_FRIENDSHIP_STATUS_DEACTIVATED:
+    {
+      return TP_SUBSCRIPTION_STATE_NO;
+    }
+    case FB_API_FRIENDSHIP_STATUS_UNKNOWN:
+    default:
+      return TP_SUBSCRIPTION_STATE_UNKNOWN;
+  }
+}
+
 static void
-fb_contact_list_dup_states(TpBaseContactList *contact_list,
+fb_contact_list_dup_states(TpBaseContactList *self,
                            TpHandle contact,
                            TpSubscriptionState *subscribe,
                            TpSubscriptionState *publish,
                            gchar **publish_request)
 {
+  FbContact *c = fb_contact_list_get_user(FB_CONTACT_LIST(self), contact);
+
   if (subscribe)
-    *subscribe = TP_SUBSCRIPTION_STATE_YES;
+  {
+    *subscribe = c ? TP_SUBSCRIPTION_STATE_YES :
+      TP_SUBSCRIPTION_STATE_UNKNOWN;
+  }
 
   if (publish)
-    *publish = TP_SUBSCRIPTION_STATE_YES;
+  {
+    *publish = c ? map_friendship_to_publish(c->fs, publish_request) :
+      TP_SUBSCRIPTION_STATE_UNKNOWN;
+  }
 }
 
 static void
@@ -133,7 +176,7 @@ fb_contact_list_init(FbContactList *self)
   FbContactListPrivate *priv = PRIVATE(self);
 
   priv->fb_contacts = g_hash_table_new_full(
-        g_direct_hash, g_direct_equal, NULL, fb_contact_destroy);
+    g_direct_hash, g_direct_equal, NULL, fb_contact_destroy);
 }
 
 static void
@@ -165,7 +208,7 @@ get_avatar_token(FbApiUser *user, GRegex *regex)
 
   if (g_regex_match(regex, user->icon, 0, &match_info))
     return g_match_info_fetch(match_info, 1);
-   else
+  else
     return g_strdup(user->csum);
 }
 
@@ -183,50 +226,51 @@ fb_contact_list_fb_contacts_changed(FbContactList *self,
 
   for (l = users; l != NULL; l = l->next)
   {
-      FbApiUser *user = l->data;
-      gchar uid[FB_ID_STRMAX];
-      FbContact *c;
-      gchar *avatar_token;
-      TpHandle handle;
+    FbApiUser *user = l->data;
+    gchar uid[FB_ID_STRMAX];
+    FbContact *c;
+    gchar *avatar_token;
+    TpHandle handle;
 
-      FB_ID_TO_STR(user->uid, uid);
+    FB_ID_TO_STR(user->uid, uid);
 
-      FB_DEBUG("contact %s changed name %s icon %s",
-               uid, user->name, user->icon);
+    FB_DEBUG("contact %s changed name %s icon %s",
+             uid, user->name, user->icon);
 
-      if (G_UNLIKELY(user->uid == my_uid))
+    if (G_UNLIKELY(user->uid == my_uid))
+    {
+      handle = tp_base_connection_get_self_handle(priv->conn);
+      c = &priv->me;
+    }
+    else
+    {
+      handle = tp_handle_ensure(priv->contact_repo, uid, NULL, NULL);
+      c = g_hash_table_lookup(priv->fb_contacts, GUINT_TO_POINTER(handle));
+
+      if (!c)
       {
-        handle = tp_base_connection_get_self_handle(priv->conn);
-        c = &priv->me;
-      }
-      else
-      {
-        handle = tp_handle_ensure(priv->contact_repo, uid, NULL, NULL);
-        c = g_hash_table_lookup(priv->fb_contacts, GUINT_TO_POINTER(handle));
-
-        if (!c)
-        {
-          c = g_new0(FbContact, 1);
-          g_hash_table_insert(priv->fb_contacts, GUINT_TO_POINTER(handle), c);
-          tp_handle_set_add(priv->contacts, handle);
-        }
-
-        tp_handle_set_add(contacts, handle);
+        c = g_new0(FbContact, 1);
+        g_hash_table_insert(priv->fb_contacts, GUINT_TO_POINTER(handle), c);
+        tp_handle_set_add(priv->contacts, handle);
       }
 
-      avatar_token = get_avatar_token(user, regex);
+      tp_handle_set_add(contacts, handle);
+    }
 
-      if (c->avatar_token && g_strcmp0(avatar_token, c->avatar_token))
-      {
-        tp_svc_connection_interface_avatars_emit_avatar_updated(
-              priv->conn, handle, avatar_token);
-      }
+    avatar_token = get_avatar_token(user, regex);
 
-      fb_contact_clear(c);
+    if (c->avatar_token && g_strcmp0(avatar_token, c->avatar_token))
+    {
+      tp_svc_connection_interface_avatars_emit_avatar_updated(
+        priv->conn, handle, avatar_token);
+    }
 
-      c->name = g_strdup(user->name);
-      c->icon = g_strdup(user->icon);
-      c->avatar_token = avatar_token;
+    fb_contact_clear(c);
+
+    c->name = g_strdup(user->name);
+    c->icon = g_strdup(user->icon);
+    c->avatar_token = avatar_token;
+    c->fs = user->fs;
   }
 
   g_regex_unref(regex);
@@ -234,7 +278,7 @@ fb_contact_list_fb_contacts_changed(FbContactList *self,
   if (!tp_handle_set_is_empty(contacts))
   {
     tp_base_contact_list_contacts_changed(
-          TP_BASE_CONTACT_LIST(self), contacts, NULL);
+      TP_BASE_CONTACT_LIST(self), contacts, NULL);
   }
 
   tp_handle_set_destroy(contacts);

@@ -49,6 +49,7 @@ struct _FbContact
   gchar *name;
   gchar *icon;
   gchar *avatar_token;
+  FbApiFriendshipStatus fs;
   gboolean active;
 };
 
