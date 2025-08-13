@@ -130,9 +130,6 @@ map_friendship_to_publish(FbApiFriendshipStatus fs, gchar **publish_request)
       return TP_SUBSCRIPTION_STATE_ASK;
     }
     case FB_API_FRIENDSHIP_STATUS_OUTGOING_REQUEST:
-    {
-      return TP_SUBSCRIPTION_STATE_NO;
-    }
     case FB_API_FRIENDSHIP_STATUS_CAN_REQUEST:
     case FB_API_FRIENDSHIP_STATUS_CAN_RECONFIRM:
     case FB_API_FRIENDSHIP_STATUS_CANNOT_REQUEST:
@@ -157,16 +154,29 @@ fb_contact_list_dup_states(TpBaseContactList *self,
 {
   FbContact *c = fb_contact_list_get_user(FB_CONTACT_LIST(self), contact);
 
-  if (subscribe)
+  if (!c)
   {
-    *subscribe = c ? TP_SUBSCRIPTION_STATE_YES :
-      TP_SUBSCRIPTION_STATE_UNKNOWN;
-  }
+    if (subscribe)
+      *subscribe = TP_SUBSCRIPTION_STATE_UNKNOWN;
 
-  if (publish)
+    if (publish)
+      *publish = TP_SUBSCRIPTION_STATE_UNKNOWN;
+
+    if (publish_request)
+      *publish_request = NULL;
+  }
+  else
   {
-    *publish = c ? map_friendship_to_publish(c->fs, publish_request) :
-      TP_SUBSCRIPTION_STATE_UNKNOWN;
+    if (subscribe)
+    {
+      if (c->fs == FB_API_FRIENDSHIP_STATUS_ARE_FRIENDS)
+        *subscribe = TP_SUBSCRIPTION_STATE_YES ;
+      else
+        *subscribe = TP_SUBSCRIPTION_STATE_NO;
+    }
+
+    if (publish)
+      *publish = map_friendship_to_publish(c->fs, publish_request);
   }
 }
 
